@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>vanguard_bms</name>
+  <version>0.0.0</version>
+  <description>The vanguard_bms package</description>
+
+  <maintainer email="tbaltovski@clearpathrobotics.com">Tony Baltovski</maintainer>
+
+  <license>BSD</license>
+
+  <author email="tbaltovski@clearpathrobotics.com">Tony Baltovski</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>rospy</depend>
+  <depend>diagnostic_msgs</depend>
+  <depend>sensor_msgs</depend>
+
+  <exec_depend>diagnostic_aggregator</exec_depend>
+  <exec_depend>python-can</exec_depend>
+  <exec_depend>python-cantools-pip</exec_depend>
+
+  <test_depend>roslint</test_depend>
+  <test_depend>roslaunch</test_depend>
+
+  <export>
+  </export>
+</package>

@@ -1,0 +1,319 @@
+#!/usr/bin/env python3
+# Software License Agreement (BSD)
+#
+# @author    Tony Baltovski <tbaltovski@clearpathrobotics.com>
+# @copyright (c) 2020, Clearpath Robotics, Inc., All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that
+# the following conditions are met:
+# * Redistributions of source code must retain the above copyright notice, this list of conditions and the
+#   following disclaimer.
+# * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+#   following disclaimer in the documentation and/or other materials provided with the distribution.
+# * Neither the name of Clearpath Robotics nor the names of its contributors may be used to endorse or
+#   promote products derived from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
+# WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+# PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+import can
+import cantools
+import os
+import queue
+import rospy
+import threading
+import time
+
+from catkin.find_in_workspaces import find_in_workspaces
+from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus, KeyValue
+from sensor_msgs.msg import BatteryState
+
+
+class Battery:
+    def __init__(self, id, db, db_data):
+        self.id = id
+        self.db = db
+        self.db_data = db_data
+
+    def process_msg(self, msg):
+        s = self.db.decode_message(msg.arbitration_id, msg.data)
+
+        for key in s:
+            self.db_data.update({key[:-3]: s[key]})
+
+    def get_bat_diag(self):
+        bat_stat = DiagnosticStatus(name =('Vanguard Flex Battery ' + str(self.id)),
+                                    level = DiagnosticStatus.OK, message = 'OK')
+
+        for key in self.db_data:
+            bat_stat.values.append(KeyValue(key, str(self.db_data[key])))
+
+        # Warnings
+        if self.db_data['AFECommAlarm'] != 0:
+            if bat_stat.level == DiagnosticStatus.WARN:
+                bat_stat.message += " AFECommAlarm"
+            else:
+                bat_stat.level = DiagnosticStatus.WARN
+                bat_stat.message = "AFECommAlarm"
+        if self.db_data['BalanaceAlarm'] != 0:
+            if bat_stat.level == DiagnosticStatus.WARN:
+                bat_stat.message += " BalanaceAlarm"
+            else:
+                bat_stat.level = DiagnosticStatus.WARN
+                bat_stat.message = "BalanaceAlarm"
+        if self.db_data['BusVoltageMatchAlarm'] != 0:
+            if bat_stat.level == DiagnosticStatus.WARN:
+                bat_stat.message += " BusVoltageMatchAlarm"
+            else:
+                bat_stat.level = DiagnosticStatus.WARN
+                bat_stat.message = "BusVoltageMatchAlarm"
+        if self.db_data['ChargerNotMatchAlarm'] != 0:
+            if bat_stat.level == DiagnosticStatus.WARN:
+                bat_stat.message += " ChargerNotMatchAlarm"
+            else:
+                bat_stat.level = DiagnosticStatus.WARN
+                bat_stat.message = "ChargerNotMatchAlarm"
+        if self.db_data['ContactorAlarm'] != 0:
+            if bat_stat.level == DiagnosticStatus.WARN:
+                bat_stat.message += " ContactorAlarm"
+            else:
+                bat_stat.level = DiagnosticStatus.WARN
+                bat_stat.message = "ContactorAlarm"
+        if self.db_data['CurrentAlarm'] != 0:
+            if bat_stat.level == DiagnosticStatus.WARN:
+                bat_stat.message += " CurrentAlarm"
+            else:
+                bat_stat.level = DiagnosticStatus.WARN
+                bat_stat.message = "CurrentAlarm"
+        if self.db_data['EstopAlarm'] != 0:
+            if bat_stat.level == DiagnosticStatus.WARN:
+                bat_stat.message += " EstopAlarm"
+            else:
+                bat_stat.level = DiagnosticStatus.WARN
+                bat_stat.message = "EstopAlarm"
+        if self.db_data['LowVoltageAlarm'] != 0:
+            if bat_stat.level == DiagnosticStatus.WARN:
+                bat_stat.message += " LowVoltageAlarm"
+            else:
+                bat_stat.level = DiagnosticStatus.WARN
+                bat_stat.message = "LowVoltageAlarm"
+        if self.db_data['MaintenaceAlarm'] != 0:
+            if bat_stat.level == DiagnosticStatus.WARN:
+                bat_stat.message += " MaintenaceAlarm"
+            else:
+                bat_stat.level = DiagnosticStatus.WARN
+                bat_stat.message = "MaintenaceAlarm"
+        if self.db_data['OverVoltAlarm'] != 0:
+            if bat_stat.level == DiagnosticStatus.WARN:
+                bat_stat.message += " OverVoltAlarm"
+            else:
+                bat_stat.level = DiagnosticStatus.WARN
+                bat_stat.message = "OverVoltAlarm"
+        if self.db_data['StartVoltAlarm'] != 0:
+            if bat_stat.level == DiagnosticStatus.WARN:
+                bat_stat.message += " StartVoltAlarm"
+            else:
+                bat_stat.level = DiagnosticStatus.WARN
+                bat_stat.message = "StartVoltAlarm"
+        if self.db_data['TemperatureAlarm'] != 0:
+            if bat_stat.level == DiagnosticStatus.WARN:
+                bat_stat.message += " TemperatureAlarm"
+            else:
+                bat_stat.level = DiagnosticStatus.WARN
+                bat_stat.message = "TemperatureAlarm"
+        if self.db_data['ZeroCurrentAlarm'] != 0:
+            if bat_stat.level == DiagnosticStatus.WARN:
+                bat_stat.message += " ZeroCurrentAlarm"
+            else:
+                bat_stat.level = DiagnosticStatus.WARN
+                bat_stat.message = "ZeroCurrentAlarm"
+
+        # Errors
+        if self.db_data['BMSAddrChangedProtect'] != 0:
+            if bat_stat.level == DiagnosticStatus.ERROR:
+                bat_stat.message += " BMSAddrChangedProtect"
+            else:
+                bat_stat.level = DiagnosticStatus.ERROR
+                bat_stat.message = "BMSAddrChangedProtect"
+        if self.db_data['BMSMultipleAddressFault'] != 0:
+            if bat_stat.level == DiagnosticStatus.ERROR:
+                bat_stat.message += " BMSMultipleAddressFault"
+            else:
+                bat_stat.level = DiagnosticStatus.ERROR
+                bat_stat.message = "BMSMultipleAddressFault"
+        if self.db_data['BalanceProtect'] != 0:
+            if bat_stat.level == DiagnosticStatus.ERROR:
+                bat_stat.message += " BalanceProtect"
+            else:
+                bat_stat.level = DiagnosticStatus.ERROR
+                bat_stat.message = "BalanceProtect"
+        if self.db_data['ChargerNotMatchProtect'] != 0:
+            if bat_stat.level == DiagnosticStatus.ERROR:
+                bat_stat.message += " ChargerNotMatchProtect"
+            else:
+                bat_stat.level = DiagnosticStatus.ERROR
+                bat_stat.message = "ChargerNotMatchProtect"
+        if self.db_data['ContactorIssueProtect'] != 0:
+            if bat_stat.level == DiagnosticStatus.ERROR:
+                bat_stat.message += " ContactorIssueProtect"
+            else:
+                bat_stat.level = DiagnosticStatus.ERROR
+                bat_stat.message = "ContactorIssueProtect"
+        if self.db_data['CurrentProtect'] != 0:
+            if bat_stat.level == DiagnosticStatus.ERROR:
+                bat_stat.message += " CurrentProtect"
+            else:
+                bat_stat.level = DiagnosticStatus.ERROR
+                bat_stat.message = "CurrentProtect"
+        if self.db_data['EStopProtect'] != 0:
+            if bat_stat.level == DiagnosticStatus.ERROR:
+                bat_stat.message += " EStopProtect"
+            else:
+                bat_stat.level = DiagnosticStatus.ERROR
+                bat_stat.message = "EStopProtect"
+        if self.db_data['FaultOouput'] != 0:
+            if bat_stat.level == DiagnosticStatus.ERROR:
+                bat_stat.message += " FaultOouput"
+            else:
+                bat_stat.level = DiagnosticStatus.ERROR
+                bat_stat.message = "FaultOouput"
+        if self.db_data['LowVoltageProtect'] != 0:
+            if bat_stat.level == DiagnosticStatus.ERROR:
+                bat_stat.message += " LowVoltageProtect"
+            else:
+                bat_stat.level = DiagnosticStatus.ERROR
+                bat_stat.message = "LowVoltageProtect"
+        if self.db_data['MaintenProtect'] != 0:
+            if bat_stat.level == DiagnosticStatus.ERROR:
+                bat_stat.message += " MaintenProtect"
+            else:
+                bat_stat.level = DiagnosticStatus.ERROR
+                bat_stat.message = "MaintenProtect"
+        if self.db_data['NoCanMsgEnableProtect'] != 0:
+            if bat_stat.level == DiagnosticStatus.ERROR:
+                bat_stat.message += " NoCanMsgEnableProtect"
+            else:
+                bat_stat.level = DiagnosticStatus.ERROR
+                bat_stat.message = "NoCanMsgEnableProtect"
+        if self.db_data['OverVoltageProtect'] != 0:
+            if bat_stat.level == DiagnosticStatus.ERROR:
+                bat_stat.message += " OverVoltageProtect"
+            else:
+                bat_stat.level = DiagnosticStatus.ERROR
+                bat_stat.message = "OverVoltageProtect"
+        if self.db_data['PermanentFaultProtect'] != 0:
+            if bat_stat.level == DiagnosticStatus.ERROR:
+                bat_stat.message += " PermanentFaultProtect"
+            else:
+                bat_stat.level = DiagnosticStatus.ERROR
+                bat_stat.message = "PermanentFaultProtect"
+        if self.db_data['StartVoltProtect'] != 0:
+            if bat_stat.level == DiagnosticStatus.ERROR:
+                bat_stat.message += " StartVoltProtect"
+            else:
+                bat_stat.level = DiagnosticStatus.ERROR
+                bat_stat.message = "StartVoltProtect"
+        if self.db_data['TemperatureProtect'] != 0:
+            if bat_stat.level == DiagnosticStatus.ERROR:
+                bat_stat.message += " TemperatureProtect"
+            else:
+                bat_stat.level = DiagnosticStatus.ERROR
+                bat_stat.message = "TemperatureProtect"
+        if self.db_data['ZeroCurrentProtect'] != 0:
+            if bat_stat.level == DiagnosticStatus.ERROR:
+                bat_stat.message += " ZeroCurrentProtect"
+            else:
+                bat_stat.level = DiagnosticStatus.ERROR
+                bat_stat.message = "ZeroCurrentProtect"
+        return bat_stat
+
+    def get_soc(self):
+        return self.db_data['SoC']
+
+    def get_pack_voltage(self):
+        return self.db_data['PackVoltagelvl']
+
+    def get_pack_current(self):
+        return self.db_data['PackCurrentlvl']
+
+    def get_capacity(self):
+        return self.db_data['DischargeCapacity']
+
+
+def vanguard_bms_driver():
+    node_name = 'vanguard_bms_driver'
+    rospy.init_node(node_name)
+
+    can_device = rospy.get_param('~can_device', 'can0')
+    # Load the database.
+    dbc_file = find_in_workspaces(project="vanguard_bms", path="config/Vanguard_Flex_Battery_4BAT_FormA.dbc")[0]
+    db = cantools.database.load_file(dbc_file)
+
+    # Get all the signals from the database and strip out the ID based ending.
+    db_data = {}
+    for i in range(len(db.messages)):
+        for j in range(len(db.messages[i].signals)):
+            db_data.update({db.messages[i].signals[j].name[:-3]: 0})
+
+    q = queue.Queue()
+
+    def can_recv():
+        can_bus = can.interface.Bus(can_device, bustype='socketcan')
+        while not rospy.is_shutdown():
+            q.put(can_bus.recv())
+
+    threading.Thread(target=can_recv, daemon=True).start()
+
+    batteries_id = [3, 4, 5, 6]
+    batteries = []
+    for i in range(0, len(batteries_id)):
+        batteries.append(Battery(batteries_id[i], db, db_data))
+
+    pub_bat_msg = rospy.Publisher("battery_state", BatteryState, queue_size = 1)
+    pub_diag = rospy.Publisher("/diagnostics", DiagnosticArray, queue_size = 1)
+
+    last_time = time.time()
+    while not rospy.is_shutdown():
+        try:
+            message = q.get()
+            battery_node_id = int(message.arbitration_id) & int(15)
+            batteries[battery_node_id - 3].process_msg(message)
+        except KeyError:
+            # print("Message ID not in database")
+            pass
+        if ((time.time() - last_time) >= 1):
+            battery_msg = BatteryState()
+            diag_array = DiagnosticArray()
+            battery_msg.power_supply_technology = BatteryState.POWER_SUPPLY_TECHNOLOGY_LION
+            battery_msg.present = True
+            for i in range(0, len(batteries)):
+                diag_array.status.append(batteries[i].get_bat_diag())
+                battery_msg.current += batteries[i].get_pack_current()
+                battery_msg.capacity += batteries[i].get_capacity()
+                if i == 0:
+                    battery_msg.percentage = batteries[0].get_soc()
+                    battery_msg.voltage = batteries[0].get_pack_voltage()
+            else:
+                if batteries[i].get_soc() < battery_msg.percentage:
+                    battery_msg.percentage = batteries[i].get_soc()
+                    battery_msg.voltage = batteries[i].get_pack_voltage()
+            battery_msg.header.stamp = rospy.Time.now()
+            pub_bat_msg.publish(battery_msg)
+
+            diag_array.header.stamp = battery_msg.header.stamp
+
+            pub_diag.publish(diag_array)
+            last_time = time.time()
+    q.join()
+
+if __name__ == '__main__':
+    try:
+        vanguard_bms_driver()
+    except rospy.ROSInterruptException:
+        pass

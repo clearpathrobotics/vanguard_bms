@@ -1,0 +1,26 @@
+analyzers:
+  bms:
+    type: diagnostic_aggregator/AnalyzerGroup
+    path: BMS
+    contains: 'Vanguard Flex Battery'
+    analyzers:
+      B3:
+        type: diagnostic_aggregator/GenericAnalyzer
+        path: B3
+        contains: '3'
+        remove_prefix: Vanguard Flex Battery 3
+      B4:
+        type: diagnostic_aggregator/GenericAnalyzer
+        path: B4
+        contains: '4'
+        remove_prefix: Vanguard Flex Battery 4
+      B5:
+        type: diagnostic_aggregator/GenericAnalyzer
+        path: B5
+        contains: '5'
+        remove_prefix: Vanguard Flex Battery 5
+      B6:
+        type: diagnostic_aggregator/GenericAnalyzer
+        path: B6
+        contains: '6'
+        remove_prefix: Vanguard Flex Battery 6
