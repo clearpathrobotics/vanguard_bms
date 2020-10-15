@@ -2,8 +2,8 @@
 Changelog for package vanguard_bms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.0 (2020-10-15)
+------------------
 * Added candump of BMS.
 * Minor rework getting warnings and errors.
 * Initial work.
