@@ -41,6 +41,15 @@ class Battery:
         self.db = db
         self.db_data = db_data
 
+    def check_for_level(self, key, level, message, level_to_check):
+        if self.db_data[key] != 1:
+            if level == level_to_check:
+                message += (' ' + key)
+            else:
+                level = level_to_check
+                message = key
+        return level, message
+
     def process_msg(self, msg):
         s = self.db.decode_message(msg.arbitration_id, msg.data)
 
@@ -55,182 +64,65 @@ class Battery:
             bat_stat.values.append(KeyValue(key, str(self.db_data[key])))
 
         # Warnings
-        if self.db_data['AFECommAlarm'] != 0:
-            if bat_stat.level == DiagnosticStatus.WARN:
-                bat_stat.message += " AFECommAlarm"
-            else:
-                bat_stat.level = DiagnosticStatus.WARN
-                bat_stat.message = "AFECommAlarm"
-        if self.db_data['BalanaceAlarm'] != 0:
-            if bat_stat.level == DiagnosticStatus.WARN:
-                bat_stat.message += " BalanaceAlarm"
-            else:
-                bat_stat.level = DiagnosticStatus.WARN
-                bat_stat.message = "BalanaceAlarm"
-        if self.db_data['BusVoltageMatchAlarm'] != 0:
-            if bat_stat.level == DiagnosticStatus.WARN:
-                bat_stat.message += " BusVoltageMatchAlarm"
-            else:
-                bat_stat.level = DiagnosticStatus.WARN
-                bat_stat.message = "BusVoltageMatchAlarm"
-        if self.db_data['ChargerNotMatchAlarm'] != 0:
-            if bat_stat.level == DiagnosticStatus.WARN:
-                bat_stat.message += " ChargerNotMatchAlarm"
-            else:
-                bat_stat.level = DiagnosticStatus.WARN
-                bat_stat.message = "ChargerNotMatchAlarm"
-        if self.db_data['ContactorAlarm'] != 0:
-            if bat_stat.level == DiagnosticStatus.WARN:
-                bat_stat.message += " ContactorAlarm"
-            else:
-                bat_stat.level = DiagnosticStatus.WARN
-                bat_stat.message = "ContactorAlarm"
-        if self.db_data['CurrentAlarm'] != 0:
-            if bat_stat.level == DiagnosticStatus.WARN:
-                bat_stat.message += " CurrentAlarm"
-            else:
-                bat_stat.level = DiagnosticStatus.WARN
-                bat_stat.message = "CurrentAlarm"
-        if self.db_data['EstopAlarm'] != 0:
-            if bat_stat.level == DiagnosticStatus.WARN:
-                bat_stat.message += " EstopAlarm"
-            else:
-                bat_stat.level = DiagnosticStatus.WARN
-                bat_stat.message = "EstopAlarm"
-        if self.db_data['LowVoltageAlarm'] != 0:
-            if bat_stat.level == DiagnosticStatus.WARN:
-                bat_stat.message += " LowVoltageAlarm"
-            else:
-                bat_stat.level = DiagnosticStatus.WARN
-                bat_stat.message = "LowVoltageAlarm"
-        if self.db_data['MaintenaceAlarm'] != 0:
-            if bat_stat.level == DiagnosticStatus.WARN:
-                bat_stat.message += " MaintenaceAlarm"
-            else:
-                bat_stat.level = DiagnosticStatus.WARN
-                bat_stat.message = "MaintenaceAlarm"
-        if self.db_data['OverVoltAlarm'] != 0:
-            if bat_stat.level == DiagnosticStatus.WARN:
-                bat_stat.message += " OverVoltAlarm"
-            else:
-                bat_stat.level = DiagnosticStatus.WARN
-                bat_stat.message = "OverVoltAlarm"
-        if self.db_data['StartVoltAlarm'] != 0:
-            if bat_stat.level == DiagnosticStatus.WARN:
-                bat_stat.message += " StartVoltAlarm"
-            else:
-                bat_stat.level = DiagnosticStatus.WARN
-                bat_stat.message = "StartVoltAlarm"
-        if self.db_data['TemperatureAlarm'] != 0:
-            if bat_stat.level == DiagnosticStatus.WARN:
-                bat_stat.message += " TemperatureAlarm"
-            else:
-                bat_stat.level = DiagnosticStatus.WARN
-                bat_stat.message = "TemperatureAlarm"
-        if self.db_data['ZeroCurrentAlarm'] != 0:
-            if bat_stat.level == DiagnosticStatus.WARN:
-                bat_stat.message += " ZeroCurrentAlarm"
-            else:
-                bat_stat.level = DiagnosticStatus.WARN
-                bat_stat.message = "ZeroCurrentAlarm"
+        bat_stat.level, bat_stat.message = self.check_for_level('AFECommAlarm', bat_stat.level,
+                                            bat_stat.message, DiagnosticStatus.WARN)
+        bat_stat.level, bat_stat.message = self.check_for_level('BalanaceAlarm', bat_stat.level,
+                                            bat_stat.message, DiagnosticStatus.WARN)
+        bat_stat.level, bat_stat.message = self.check_for_level('BusVoltageMatchAlarm', bat_stat.level,
+                                            bat_stat.message, DiagnosticStatus.WARN)
+        bat_stat.level, bat_stat.message = self.check_for_level('ChargerNotMatchAlarm', bat_stat.level,
+                                            bat_stat.message, DiagnosticStatus.WARN)
+        bat_stat.level, bat_stat.message = self.check_for_level('ContactorAlarm', bat_stat.level,
+                                            bat_stat.message, DiagnosticStatus.WARN)
+        bat_stat.level, bat_stat.message = self.check_for_level('CurrentAlarm', bat_stat.level,
+                                            bat_stat.message, DiagnosticStatus.WARN)
+        bat_stat.level, bat_stat.message = self.check_for_level('EstopAlarm', bat_stat.level,
+                                            bat_stat.message, DiagnosticStatus.WARN)
+        bat_stat.level, bat_stat.message = self.check_for_level('LowVoltageAlarm', bat_stat.level,
+                                            bat_stat.message, DiagnosticStatus.WARN)
+        bat_stat.level, bat_stat.message = self.check_for_level('MaintenaceAlarm', bat_stat.level,
+                                            bat_stat.message, DiagnosticStatus.WARN)
+        bat_stat.level, bat_stat.message = self.check_for_level('OverVoltAlarm', bat_stat.level,
+                                            bat_stat.message, DiagnosticStatus.WARN)
+        bat_stat.level, bat_stat.message = self.check_for_level('StartVoltAlarm', bat_stat.level,
+                                            bat_stat.message, DiagnosticStatus.WARN)
+        bat_stat.level, bat_stat.message = self.check_for_level('TemperatureAlarm', bat_stat.level,
+                                            bat_stat.message, DiagnosticStatus.WARN)
+        bat_stat.level, bat_stat.message = self.check_for_level('ZeroCurrentAlarm', bat_stat.level,
+                                            bat_stat.message, DiagnosticStatus.WARN)
 
         # Errors
-        if self.db_data['BMSAddrChangedProtect'] != 0:
-            if bat_stat.level == DiagnosticStatus.ERROR:
-                bat_stat.message += " BMSAddrChangedProtect"
-            else:
-                bat_stat.level = DiagnosticStatus.ERROR
-                bat_stat.message = "BMSAddrChangedProtect"
-        if self.db_data['BMSMultipleAddressFault'] != 0:
-            if bat_stat.level == DiagnosticStatus.ERROR:
-                bat_stat.message += " BMSMultipleAddressFault"
-            else:
-                bat_stat.level = DiagnosticStatus.ERROR
-                bat_stat.message = "BMSMultipleAddressFault"
-        if self.db_data['BalanceProtect'] != 0:
-            if bat_stat.level == DiagnosticStatus.ERROR:
-                bat_stat.message += " BalanceProtect"
-            else:
-                bat_stat.level = DiagnosticStatus.ERROR
-                bat_stat.message = "BalanceProtect"
-        if self.db_data['ChargerNotMatchProtect'] != 0:
-            if bat_stat.level == DiagnosticStatus.ERROR:
-                bat_stat.message += " ChargerNotMatchProtect"
-            else:
-                bat_stat.level = DiagnosticStatus.ERROR
-                bat_stat.message = "ChargerNotMatchProtect"
-        if self.db_data['ContactorIssueProtect'] != 0:
-            if bat_stat.level == DiagnosticStatus.ERROR:
-                bat_stat.message += " ContactorIssueProtect"
-            else:
-                bat_stat.level = DiagnosticStatus.ERROR
-                bat_stat.message = "ContactorIssueProtect"
-        if self.db_data['CurrentProtect'] != 0:
-            if bat_stat.level == DiagnosticStatus.ERROR:
-                bat_stat.message += " CurrentProtect"
-            else:
-                bat_stat.level = DiagnosticStatus.ERROR
-                bat_stat.message = "CurrentProtect"
-        if self.db_data['EStopProtect'] != 0:
-            if bat_stat.level == DiagnosticStatus.ERROR:
-                bat_stat.message += " EStopProtect"
-            else:
-                bat_stat.level = DiagnosticStatus.ERROR
-                bat_stat.message = "EStopProtect"
-        if self.db_data['FaultOouput'] != 0:
-            if bat_stat.level == DiagnosticStatus.ERROR:
-                bat_stat.message += " FaultOouput"
-            else:
-                bat_stat.level = DiagnosticStatus.ERROR
-                bat_stat.message = "FaultOouput"
-        if self.db_data['LowVoltageProtect'] != 0:
-            if bat_stat.level == DiagnosticStatus.ERROR:
-                bat_stat.message += " LowVoltageProtect"
-            else:
-                bat_stat.level = DiagnosticStatus.ERROR
-                bat_stat.message = "LowVoltageProtect"
-        if self.db_data['MaintenProtect'] != 0:
-            if bat_stat.level == DiagnosticStatus.ERROR:
-                bat_stat.message += " MaintenProtect"
-            else:
-                bat_stat.level = DiagnosticStatus.ERROR
-                bat_stat.message = "MaintenProtect"
-        if self.db_data['NoCanMsgEnableProtect'] != 0:
-            if bat_stat.level == DiagnosticStatus.ERROR:
-                bat_stat.message += " NoCanMsgEnableProtect"
-            else:
-                bat_stat.level = DiagnosticStatus.ERROR
-                bat_stat.message = "NoCanMsgEnableProtect"
-        if self.db_data['OverVoltageProtect'] != 0:
-            if bat_stat.level == DiagnosticStatus.ERROR:
-                bat_stat.message += " OverVoltageProtect"
-            else:
-                bat_stat.level = DiagnosticStatus.ERROR
-                bat_stat.message = "OverVoltageProtect"
-        if self.db_data['PermanentFaultProtect'] != 0:
-            if bat_stat.level == DiagnosticStatus.ERROR:
-                bat_stat.message += " PermanentFaultProtect"
-            else:
-                bat_stat.level = DiagnosticStatus.ERROR
-                bat_stat.message = "PermanentFaultProtect"
-        if self.db_data['StartVoltProtect'] != 0:
-            if bat_stat.level == DiagnosticStatus.ERROR:
-                bat_stat.message += " StartVoltProtect"
-            else:
-                bat_stat.level = DiagnosticStatus.ERROR
-                bat_stat.message = "StartVoltProtect"
-        if self.db_data['TemperatureProtect'] != 0:
-            if bat_stat.level == DiagnosticStatus.ERROR:
-                bat_stat.message += " TemperatureProtect"
-            else:
-                bat_stat.level = DiagnosticStatus.ERROR
-                bat_stat.message = "TemperatureProtect"
-        if self.db_data['ZeroCurrentProtect'] != 0:
-            if bat_stat.level == DiagnosticStatus.ERROR:
-                bat_stat.message += " ZeroCurrentProtect"
-            else:
-                bat_stat.level = DiagnosticStatus.ERROR
-                bat_stat.message = "ZeroCurrentProtect"
+        bat_stat.level, bat_stat.message = self.check_for_level('BMSAddrChangedProtect', bat_stat.level,
+                                            bat_stat.message, DiagnosticStatus.ERROR)
+        bat_stat.level, bat_stat.message = self.check_for_level('BMSMultipleAddressFault', bat_stat.level,
+                                            bat_stat.message, DiagnosticStatus.ERROR)
+        bat_stat.level, bat_stat.message = self.check_for_level('BalanceProtect', bat_stat.level,
+                                            bat_stat.message, DiagnosticStatus.ERROR)
+        bat_stat.level, bat_stat.message = self.check_for_level('ChargerNotMatchProtect', bat_stat.level,
+                                            bat_stat.message, DiagnosticStatus.ERROR)
+        bat_stat.level, bat_stat.message = self.check_for_level('ContactorIssueProtect', bat_stat.level,
+                                            bat_stat.message, DiagnosticStatus.ERROR)
+        bat_stat.level, bat_stat.message = self.check_for_level('CurrentProtect', bat_stat.level,
+                                            bat_stat.message, DiagnosticStatus.ERROR)
+        bat_stat.level, bat_stat.message = self.check_for_level('EStopProtect', bat_stat.level,
+                                            bat_stat.message, DiagnosticStatus.ERROR)
+        bat_stat.level, bat_stat.message = self.check_for_level('FaultOouput', bat_stat.level,
+                                            bat_stat.message, DiagnosticStatus.ERROR)
+        bat_stat.level, bat_stat.message = self.check_for_level('LowVoltageProtect', bat_stat.level,
+                                            bat_stat.message, DiagnosticStatus.ERROR)
+        bat_stat.level, bat_stat.message = self.check_for_level('MaintenProtect', bat_stat.level,
+                                            bat_stat.message, DiagnosticStatus.ERROR)
+        bat_stat.level, bat_stat.message = self.check_for_level('OverVoltageProtect', bat_stat.level,
+                                            bat_stat.message, DiagnosticStatus.ERROR)
+        bat_stat.level, bat_stat.message = self.check_for_level('PermanentFaultProtect', bat_stat.level,
+                                            bat_stat.message, DiagnosticStatus.ERROR)
+        bat_stat.level, bat_stat.message = self.check_for_level('StartVoltProtect', bat_stat.level,
+                                            bat_stat.message, DiagnosticStatus.ERROR)
+        bat_stat.level, bat_stat.message = self.check_for_level('TemperatureProtect', bat_stat.level,
+                                            bat_stat.message, DiagnosticStatus.ERROR)
+        bat_stat.level, bat_stat.message = self.check_for_level('ZeroCurrentProtect', bat_stat.level,
+                                            bat_stat.message, DiagnosticStatus.ERROR)
+
         return bat_stat
 
     def get_soc(self):
